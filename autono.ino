@@ -1,5 +1,3 @@
-//by pixelatedpic
-
 #include <SPI.h>
 #include <PString.h>
 #include <SD.h>
@@ -11,12 +9,8 @@ int q=0;
 //String mystring[100];
 String t[50];
 
-void setup() {
-  // put your setup code here, to run once:
-  
-  Serial.begin(9600);
-  SD.begin(10);
-  if (SD.exists("test.txt"))//checking if the file exists
+void tt(){
+   if (SD.exists("test.txt"))//checking if the file exists
   {
     Serial.println("file available to read");//debug
     waypoints = SD.open("test.txt",FILE_READ);
@@ -48,7 +42,49 @@ void setup() {
     else
     {
       Serial.println("Could not open the file");
-    }
+    } 
+  
+}
+
+void setup() {
+  // put your setup code here, to run once:
+  
+  Serial.begin(9600);
+  SD.begin(10);
+  tt();
+//  if (SD.exists("test.txt"))//checking if the file exists
+//  {
+//    Serial.println("file available to read");//debug
+//    waypoints = SD.open("test.txt",FILE_READ);
+//    while(waypoints.available())
+//    {
+//      
+//      //Serial.write(waypoints.read());
+//      c = waypoints.read();
+//      
+//      PString mystring(buffer, sizeof(buffer),c);
+//      t[i] += mystring;
+//      t[i].trim();
+//      if (mystring=="\r"){
+//      i++;
+//      
+//      
+//      }
+//      
+//     // Serial.println(i);
+//      //delay(1000);
+//      //i++;
+//      //Serial.println(buffer);
+////      if(c=='\n'){
+////      }
+//      
+//    }
+//    waypoints.close();
+//  }
+//    else
+//    {
+//      Serial.println("Could not open the file");
+//    }
   
 //  else
 //  {
