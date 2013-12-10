@@ -95,6 +95,8 @@ void setup() {
 }
 
 void loop() {
+
+  Serial.println(t[0].substring(2,10));
   // put your main code here, to run repeatedly:
   Serial.print("home: ");
   Serial.println(t[0]);
