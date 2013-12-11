@@ -122,3 +122,60 @@ void loop() {
   delay(10000);
 
 }
+
+/*
+void tr(){
+   if (SD.exists("test.txt"))//checking if the file exists
+  {
+    Serial.println("file available to read");//debug
+    waypoints = SD.open("test.txt",FILE_READ);
+    R_Line = 1;
+    while(waypoints.available())
+    {
+      
+      //Serial.write(waypoints.read());
+      c = waypoints.read();
+      if (c=='\r')
+      {
+        Line++;
+      
+     // Serial.print(c);
+      if (Line == R_Line)
+        {
+        Serial.print("matched");
+        c = waypoints.read();
+        
+        PString mystring(buffer, sizeof(buffer),c);
+        t[0] += mystring;
+        t[0].trim();
+        if(mystring=="\r") break; 
+        }
+        Serial.println(t[0]);
+      //PString mystring(buffer, sizeof(buffer),c);
+      //t[i] += mystring;
+      //t[i].trim();
+       
+     // if (c=='\r'){
+      //i++;
+      //q++;
+      
+      }
+      
+    
+      //delay(1000);
+      //i++;
+      //Serial.println(buffer);
+//      if(c=='\n'){
+//      }
+      
+    }
+    waypoints.close();
+    //return i;
+  }
+    else
+    {
+      Serial.println("Could not open the file");
+    } 
+  
+}
+*/
