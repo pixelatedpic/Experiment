@@ -24,12 +24,12 @@ String tt(){
     waypoints = SD.open("test.txt",FILE_READ);
     while(waypoints.available())
     {
-      while ( waypoints.read() != '\n' );
+      while ( waypoints.read() != '\n' );//counting number of lines
       
       Serial.println(i);
       if (i==rr)
       {
-         //Serial.println("Matched");// debug
+         //Serial.println("Matched");// debug fills the buffer with 21 char till line terminate.
          for (q=0; q<=21;q++)
          {
          c = waypoints.read();
@@ -40,7 +40,7 @@ String tt(){
          //Serial.println(t[0]);
          if(mystring==";") return lat_lon;
          }
-        //Serial.println(t[0]);
+        //Serial.println(t[0]);// great it prints the shit
          break;
       }
       i++;
