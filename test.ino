@@ -5,7 +5,7 @@
 File waypoints;
 char c;
 char buffer[21];
-int i=0;
+int i=1;
 int q=1;
 String MaxWP; 
 //String mystring[100];
@@ -15,7 +15,7 @@ String j[21];
 String HOME;
 String homy;
 boolean hom = false;
-int rr = 5;
+int rr = 3;
 int ff=0;
 String tt(){
    if (SD.exists("test.txt"))//checking if the file exists
@@ -24,9 +24,28 @@ String tt(){
     waypoints = SD.open("test.txt",FILE_READ);
     while(waypoints.available())
     {
+      while ( waypoints.read() != '\n' );
       
+      Serial.println(i);
+      if (i==rr)
+      {
+         Serial.println("Matched");
+         for (q=0; q<=21;q++)
+         {
+         c = waypoints.read();
+         //Serial.println(c);
+         PString mystring(buffer, sizeof(buffer),c);
+         t[0] += mystring;
+         t[0].trim();
+         //Serial.println(t[0]);
+         if(mystring=="\r") return t[0];
+         }
+        //Serial.println(t[0]);
+         break;
+      }
+      i++;
       //Serial.write(waypoints.read());
-      c = waypoints.read();
+/*      c = waypoints.read();
       
       PString mystring(buffer, sizeof(buffer),c);
       //t[i] += mystring;
@@ -38,7 +57,7 @@ String tt(){
           
           Serial.print("Line no.: ");
           Serial.println(i);
-        Serial.println("matched");
+          Serial.println("matched");
         
        // for (q=0; q<=ff; q++)
        // {
@@ -50,7 +69,7 @@ String tt(){
           //Serial.println(q);
         //}
         //Serial.println(t[0]);
-      if (t[0]=="\r") return t[0];
+      if (mystring=="\n") return t[0];
       break;
         }
         else
@@ -61,7 +80,7 @@ String tt(){
      // Serial.print("Line no.: ");
      // Serial.println(i);
       }
-      
+      */
     
       //delay(1000);
       //i++;
@@ -71,7 +90,7 @@ String tt(){
       
     }
     waypoints.close();
-   // return i;
+   //return i;
   }
     else
     {
@@ -103,7 +122,7 @@ String tr(){
             PString mystring(buffer, sizeof(buffer),c);
             HOME += mystring;
             HOME.trim();
-            if(mystring=="\r") break;
+            if(mystring=="\n") break;
           }   
         }//else{ hom = false; }
         
