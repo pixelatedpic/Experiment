@@ -13,9 +13,10 @@ SoftwareSerial ss(2, 3); // RX, TX
 int enablePin = 6;
 int in1Pin = 4;
 int in2Pin = 7;
-int potPin = 0;
+boolean motorrun=false;
+//int potPin = 0;
 int speed;
-boolean reverse = false;
+boolean reverse=false;
 
 //File waypoints;
 char c=0;
@@ -25,13 +26,21 @@ int blah=1;
 int blah2=1;
 double lat_gps;
 double lon_gps;
-
+String fix_gps;
+int waycount = 4;
+int waypoint = 0;
+boolean homei = false;
 //String logfilename="20131217-01.csv";
 TinyGPSCustom ellipsoidalHeight(gps, "GPGGA", 11);
 TinyGPSCustom h_dop(gps, "GPGGA", 8);
 TinyGPSCustom northing(gps, "GPGGA", 3);
 TinyGPSCustom easting(gps, "GPGGA", 5);
 TinyGPSCustom fix(gps, "GPGGA", 6);
+
+
+double wlat, wlon;
+//const double DEST_LAT = 4.2029716;
+//const double DEST_LON = 73.231562;
 /*
 Function accepts int arg, which is the required waypoint (line)
 to be returned (String type).
@@ -111,9 +120,11 @@ Uses TinyGPS++ lib.
 */
 void getcurGPS() {
   
-//  feedGPS();
-//  if (fix.value()!=0)
-//  {
+  feedGPS();
+  fix_gps = fix.value();
+  //Serial.println(fix_gps);
+  if (fix_gps=="1")
+ {
 //    feedGPS();
 //    if (gps.date.isUpdated()) {
 //      Serial.println();
@@ -148,6 +159,11 @@ void getcurGPS() {
 //    feedGPS();
 //    Serial.print(F(","));
 //    Serial.print(ellipsoidalHeight.value());
+
+      //feedGPS();
+      //if (gps.location.isUpdated()) {
+      
+      //}
     
     //test courseto here...
     //calc_course();
@@ -156,34 +172,46 @@ void getcurGPS() {
     // TODO
     // Variables needs to be assigned to above, and those variables needs to be fed to write_points here.
     //write_points(gps.date.value(),gps.time.value(),gps.satellites.value(),h_dop.value(),gps.location.lat(),northing.value(),gps.location.lng(),easting.value(),ellipsoidalHeight.value());
-  //}
+  }
 }
 
-void calc_course() {
-    const double DEST_LAT = 4.2029716;
-    const double DEST_LON = 73.231562;
+double calc_course(const double wlat, const double wlon) {
+    //const double DEST_LAT = 4.2029716;
+    //const double DEST_LON = 73.231562;
     double coursetodest =
       gps.courseTo(
-        gps.location.lat(),
-        gps.location.lng(),
-        DEST_LAT,
-        DEST_LON);
-    Serial.println();
-    Serial.print(coursetodest);
-    Serial.print(gps.cardinal(coursetodest));    
+        lat_gps,
+        lon_gps,
+        wlat,
+        wlon);
+    //Serial.println();
+    //Serial.print(coursetodest);
+    //Serial.print(gps.cardinal(coursetodest));
+    return coursetodest;   
 }
 
-void calc_distKm() {
-    const double DEST_LAT = 4.2029716;
-    const double DEST_LON = 73.231562;
+double calc_distKm(const double wlat, const double wlon) {
+    //const double DEST_LAT = 4.2029716;
+    //const double DEST_LON = 73.231562;
     double disttodest =
       gps.distanceBetween(
-        gps.location.lat(),
-        gps.location.lng(),
-        DEST_LAT,
-        DEST_LON) / 1000.0;
-    Serial.println();
-    Serial.print(disttodest);
+        lat_gps,
+        lon_gps,
+        wlat,
+        wlon) ;/// 1000.0;
+    //Serial.println();
+    //Serial.print(disttodest);
+    disttodest=0.5;
+    if (disttodest < 1)//9 meter radius
+    {
+      if(waycount==waypoint){
+        homei = true;
+        motorrun = false;
+        Serial.println("END OF TRIP");
+      }
+      waypoint+=1;
+    }    
+    return disttodest;
 }
 
 /*
@@ -216,20 +244,20 @@ Function descr here...
 /*
 Function descr here...
 */
-float getBearing(String dest_wp){
+//float getBearing(String dest_wp){
   // get current latlon from getcurGPS func
   // Calculate Bearing/Course 
   // Return Course, Distance
-}
+//}
 
 void setupHMC5883L(){
   //Setup the HMC5883L, and check for errors
   int error;
   error = compass.SetScale(1.3); //Set the scale of the compass.
-  if(error != 0) Serial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
+  if(error != 0) ;//Serial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
 
   error = compass.SetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
-  if(error != 0) Serial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
+  if(error != 0);// Serial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
 }
 
 float getHeading(){
@@ -278,28 +306,121 @@ void setup() {
 //  } else {
 //    Serial.println(F("Couldn't open log (aquired GPS) file"));
 //  } 
+
+  waypoint=1;
+  speed = 100;// speed of motor
+  motorrun=true;
 }
 
-int speedset(){
-  speed = analogRead(potPin) / 4;
-  return speed; 
-}
+//int speedset(){
+//  speed = analogRead(potPin) / 4;
+//  return speed; 
+//}
  
-void setMotor()
+int setMotor(boolean motorrun)//this part works
 {
-  speedset();
+  Serial.print("Motor status: ");
+  Serial.println(motorrun);
+  if(motorrun){
   analogWrite(enablePin, speed);
-  digitalWrite(in1Pin, ! reverse);
+  digitalWrite(in1Pin, !reverse );
   digitalWrite(in2Pin, reverse);
+  }
+  else{
+  //analogWrite(enablePin, 0);
+  digitalWrite(in1Pin, 0);
+  digitalWrite(in2Pin, 0); 
+    
+  }
+  //return();
 }
 
 
 void loop() {
   
+
+  
+  if (homei==false){
+  Serial.print("current waypoint: ");
+  Serial.println(waypoint);  
+  
+  bool newdata = false;
+  unsigned long start = millis();
+  
+  while (millis() - start < 1000) {
+    if (feedGPS()) {
+      newdata = true;
+    }
+  }
+  
+  if (newdata) {
+    getcurGPS();
+    Serial.print("GPS LAT: ");
+    Serial.println(lat_gps,6);
+    Serial.print("GPS LON: ");
+    Serial.println(lon_gps,6);    
+  }
+  
+  if (waypoint==1)
+  {
+    wlat = 4.21013;//waypoint one
+    wlon = 73.54006;
+    //return;
+  }
+  if (waypoint==2)
+  {
+    wlat = 4.2029716;//waypoint two
+    wlon = 73.231562;
+    //return;
+  }
+  if (waypoint==3)
+  {
+    wlat = 4.2029716;//waypoint three
+    wlon = 73.231562;
+    //return;
+  }
+  if (waypoint==4)
+  {
+    wlat = 4.2029716;//waypoint four
+    wlon = 73.231562;
+    //return;
+  }
+  
+  double dit2way = calc_distKm(wlat, wlon);
+  Serial.print("Distance to waypoint: ");
+  Serial.println(dit2way);
+  //calc_course(wlat, wlon);
+  double cou2way = calc_course(wlat, wlon);
+  Serial.print("GPS Bearing to waypoint: ");
+  Serial.println(cou2way);
+  
   float heading = getHeading();
+  Serial.print("Compass data: ");
   Serial.println(heading);
-  delay(100); //only here to slow down the serial print
-  setMotor();
+  
+  if(motorrun==false){//this part works
+  setMotor(false); 
+  }
+  else if (motorrun==true){
+  setMotor(true);
+   
+  }
+  //else{
+  //setMotor(false);
+  //}
+  }
+  
+  
+  
+}
+//const double DEST_LAT = 4.2029716;
+//const double DEST_LON = 73.231562;
+
+
+//  float heading = getHeading();
+//  Serial.println(heading);
+//  delay(100); //only here to slow down the serial print
+//  setMotor();
   
 //  if (blah==1) {
 //    int getwp;
@@ -324,22 +445,9 @@ void loop() {
       Serial.println(gps.location.lng());
   }
   */
-  bool newdata = false;
-  unsigned long start = millis();
-  
-  while (millis() - start < 1000) {
-    if (feedGPS()) {
-      newdata = true;
-    }
-  }
 
-  if (newdata) {
-    getcurGPS();
-    Serial.print("GPS LAT: ");
-    Serial.println(lat_gps);
-    Serial.print("GPS LON: ");
-    Serial.println(lon_gps);    
-  }
+
+  
   
  /* if (blah2<=100) {
     getcurGPS();
@@ -349,4 +457,8 @@ void loop() {
   }
 */
   
-}
+//void done(){
+//setMotor(reverse);
+//Serial.println();
+//Serial.println("Tadaaa Back to home");
+//}
