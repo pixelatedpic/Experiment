@@ -1,0 +1,12 @@
+if (heading < new) heading += 360;  // denormalize ...
+int left = heading - new;   // calculate left turn, will allways be 0..359  
+
+// take the smallest turn
+if (left < 180) 
+{
+  // Turn left : left degrees
+}
+else
+{
+  // Turn right : 360-left degrees
+}
