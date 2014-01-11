@@ -1,15 +1,32 @@
+//#include <Servo.h>
+#include <PWMServo.h>
 #include <Wire.h>
 #include <HMC5883L.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
-//#include <SPI.h>
-//#include <SD.h>
-HMC5883L compass;
-//compass pin 4,5
 
-TinyGPSPlus gps;
+
 SoftwareSerial ss(2, 3); // RX, TX
 
+TinyGPSPlus gps;
+
+HMC5883L compass;
+PWMServo myservo;
+int pos = 90;
+//#include <SPI.h>
+//#include <SD.h>
+
+//compass pin 4,5
+
+
+
+//#define SERVO  9
+//#define CENTER 90
+//#define GOAL   0
+
+//int goal = GOAL;
+
+    
 int enablePin = 6;
 int in1Pin = 4;
 int in2Pin = 7;
@@ -17,7 +34,7 @@ boolean motorrun=false;
 //int potPin = 0;
 int speed;
 boolean reverse=false;
-
+String fixed;
 //File waypoints;
 char c=0;
 char byteRead;
@@ -201,7 +218,7 @@ double calc_distKm(const double wlat, const double wlon) {
         wlon) ;/// 1000.0;
     //Serial.println();
     //Serial.print(disttodest);
-    disttodest=0.5;
+    //disttodest=0.5;
     if (disttodest < 1)//9 meter radius
     {
       if(waycount==waypoint){
@@ -263,15 +280,19 @@ void setupHMC5883L(){
 float getHeading(){
   //Get the reading from the HMC5883L and calculate the heading
   MagnetometerScaled scaled = compass.ReadScaledAxis(); //scaled values from compass.
-  float heading = atan2(scaled.XAxis, scaled.YAxis);
-  float declinationAngle = -0.0523598776;
+  float declinationAngle = -0.05235;
+  float heading = atan2(scaled.YAxis, scaled.XAxis)+declinationAngle;
+  
   // If you have an EAST declination, use += declinationAngle, if you have a WEST declination, use -= declinationAngle
-  heading -= declinationAngle;
+  //heading -= declinationAngle;
   // Correct for when signs are reversed.
-  if(heading > 2*PI) heading -= 2*PI;
-  if(heading < 0) heading += 2*PI;
+  if(heading < 0)
+    heading += 2 * PI;
+  // Check for wrap due to addition of declination.
+  if(heading > 2 * PI)
+    heading -= 2 * PI;
   //-0.0523598776
-  return heading * RAD_TO_DEG; //radians to degrees
+  return (int) (heading * 180 / M_PI); //radians to degrees
 }
 
 void setup() {
@@ -279,10 +300,21 @@ void setup() {
   //hom =true;
   Serial.begin(9600);
   ss.begin(9600);
+  
   Wire.begin();
-  //SD.begin(10);
   compass = HMC5883L(); //new instance of HMC5883L library
   setupHMC5883L(); //setup the HMC5883L
+  
+  myservo.attach(SERVO_PIN_A);
+  myservo.write(90);
+  delay(10);
+  myservo.detach();
+  
+  
+  
+
+  //SD.begin(10);
+  
 
   pinMode(in1Pin, OUTPUT);
   pinMode(in2Pin, OUTPUT);
@@ -310,6 +342,7 @@ void setup() {
   waypoint=1;
   speed = 100;// speed of motor
   motorrun=true;
+  
 }
 
 //int speedset(){
@@ -337,13 +370,7 @@ int setMotor(boolean motorrun)//this part works
 
 
 void loop() {
-  
-
-  
-  if (homei==false){
-  Serial.print("current waypoint: ");
-  Serial.println(waypoint);  
-  
+ 
   bool newdata = false;
   unsigned long start = millis();
   
@@ -352,6 +379,23 @@ void loop() {
       newdata = true;
     }
   }
+  feedGPS();
+  fixed = fix.value();
+  //Serial.println(fixed);
+  //&& fixed=="0"
+  if (homei==false ){
+  //Serial.println("fixed");
+  Serial.print("current waypoint: ");
+  Serial.println(waypoint);  
+//  
+//    bool newdata = false;
+//  unsigned long start = millis();
+//  
+//  while (millis() - start < 1000) {
+//    if (feedGPS()) {
+//      newdata = true;
+//    }
+//  }
   
   if (newdata) {
     getcurGPS();
@@ -362,9 +406,9 @@ void loop() {
   }
   
   if (waypoint==1)
-  {
-    wlat = 4.21013;//waypoint one
-    wlon = 73.54006;
+  {	
+    wlat = 4.210374;//waypoint one
+    wlon = 73.540614;
     //return;
   }
   if (waypoint==2)
@@ -394,16 +438,33 @@ void loop() {
   Serial.print("GPS Bearing to waypoint: ");
   Serial.println(cou2way);
   
-  float heading = getHeading();
+  int heading = getHeading();
   Serial.print("Compass data: ");
   Serial.println(heading);
   
+      //int angle = getDegrees();cou2way
+      int error1 = cou2way - heading;
+      if (error1 >= 180)
+        error1 -= 360;
+      if (error1 <= -180)
+        error1 += 360;
+      // Update servo and keep with range of +/- 60
+      if (error1 > 60)
+        error1 = 60;
+      if (error1 < -60)
+        error1 = -60;
+      myservo.detach(); 
+      myservo.attach(SERVO_PIN_A);
+      myservo.write(100  + error1);
+      delay(10);
+      
   if(motorrun==false){//this part works
-  setMotor(false); 
+  setMotor(false);
+  //myservo.detach(); 
   }
   else if (motorrun==true){
   setMotor(true);
-   
+  //SERVO_PIN_A
   }
   //else{
   //setMotor(false);
