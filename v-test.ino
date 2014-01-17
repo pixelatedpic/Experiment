@@ -26,7 +26,8 @@ int pos = 90;
 
 //int goal = GOAL;
 
-    
+int arm_time=1;
+int pulse=1000;
 int enablePin = 6;
 int in1Pin = 4;
 int in2Pin = 7;
@@ -218,7 +219,7 @@ double calc_distKm(const double wlat, const double wlon) {
         wlon) ;/// 1000.0;
     //Serial.println();
     //Serial.print(disttodest);
-    //disttodest=0.5;
+    // disttodest=0.5;
     if (disttodest < 1)//9 meter radius
     {
       if(waycount==waypoint){
@@ -298,7 +299,7 @@ float getHeading(){
 void setup() {
   // put your setup code here, to run once:
   //hom =true;
-  Serial.begin(9600);
+  Serial.begin(115200);
   ss.begin(9600);
   
   Wire.begin();
@@ -311,14 +312,22 @@ void setup() {
   myservo.detach();
   
   
+  pinMode(enablePin,OUTPUT);
+  for(arm_time=0;arm_time<500;arm_time +=1)
+  {
+     digitalWrite(enablePin,HIGH);
+     delayMicroseconds(1100);
+     digitalWrite(enablePin,LOW);
+     delay(20-(pulse/1000));
+  }
   
 
   //SD.begin(10);
   
 
-  pinMode(in1Pin, OUTPUT);
-  pinMode(in2Pin, OUTPUT);
-  pinMode(enablePin, OUTPUT);
+  //pinMode(in1Pin, OUTPUT);
+  //pinMode(in2Pin, OUTPUT);
+  //pinMode(enablePin, OUTPUT);
 
   //Serial.println(F("Calculating total WPs ..."));
   //tot_wps_infile = total_wps();
@@ -340,7 +349,9 @@ void setup() {
 //  } 
 
   waypoint=1;
-  speed = 100;// speed of motor
+  //speed = 0;// speed of motor
+  //analogWrite(enablePin, 10);
+  //delay(1000);
   motorrun=true;
   
 }
@@ -352,17 +363,30 @@ void setup() {
  
 int setMotor(boolean motorrun)//this part works
 {
+  int pulse=1185;
   Serial.print("Motor status: ");
   Serial.println(motorrun);
   if(motorrun){
-  analogWrite(enablePin, speed);
-  digitalWrite(in1Pin, !reverse );
-  digitalWrite(in2Pin, reverse);
+    digitalWrite(enablePin,HIGH);
+     delayMicroseconds(pulse);
+     digitalWrite(enablePin,LOW);
+     delay(20-(pulse/1000));  
+  //analogWrite(enablePin, speeed);
+  //digitalWrite(in1Pin, !reverse );
+  //digitalWrite(in2Pin, reverse);
   }
   else{
+  //analogWrite(enablePin, speed);
   //analogWrite(enablePin, 0);
-  digitalWrite(in1Pin, 0);
-  digitalWrite(in2Pin, 0); 
+  //digitalWrite(in1Pin, 0);
+  //digitalWrite(in2Pin, 0); 
+      //digitalWrite(enablePin,HIGH);
+     //delayMicroseconds(pulse);
+     //digitalWrite(enablePin,HIGH);
+     //delayMicroseconds(1020);
+     digitalWrite(enablePin,LOW);
+     //delay(20-(1020/1000));
+     //delay(20-(pulse/1000));
     
   }
   //return();
@@ -370,7 +394,7 @@ int setMotor(boolean motorrun)//this part works
 
 
 void loop() {
- 
+ // pulse=1290;
   bool newdata = false;
   unsigned long start = millis();
   
@@ -382,8 +406,8 @@ void loop() {
   feedGPS();
   fixed = fix.value();
   //Serial.println(fixed);
-  //&& fixed=="0"
-  if (homei==false ){
+  //&& fixed >="1"
+  if (homei==false && fixed >="1"){
   //Serial.println("fixed");
   Serial.print("current waypoint: ");
   Serial.println(waypoint);  
@@ -407,26 +431,26 @@ void loop() {
   
   if (waypoint==1)
   {	
-    wlat = 4.210374;//waypoint one
-    wlon = 73.540614;
+    wlat = 4.207753;//waypoint one
+    wlon = 73.543100;
     //return;
   }
   if (waypoint==2)
   {
-    wlat = 4.2029716;//waypoint two
-    wlon = 73.231562;
+    wlat = 4.207705;//waypoint two
+    wlon = 73.543248;
     //return;
   }
   if (waypoint==3)
   {
-    wlat = 4.2029716;//waypoint three
-    wlon = 73.231562;
+    wlat = 4.207630;//waypoint three
+    wlon = 73.543218;
     //return;
   }
   if (waypoint==4)
   {
-    wlat = 4.2029716;//waypoint four
-    wlon = 73.231562;
+    wlat = 4.207772;//waypoint four
+    wlon = 73.542977;
     //return;
   }
   
