@@ -1,5 +1,5 @@
-//#include <Servo.h>
-#include <PWMServo.h>
+#include <Servo.h>
+//#include <PWMServo.h>
 #include <Wire.h>
 #include <HMC5883L.h>
 #include <TinyGPS++.h>
@@ -7,17 +7,26 @@
 
 
 SoftwareSerial ss(2, 3); // RX, TX
-
 TinyGPSPlus gps;
-
+Servo ESC;  
 HMC5883L compass;
-PWMServo myservo;
+Servo rudder;
+
+int val;                                   //Value for motor speed.
+int analogPin = 3;                         //Potentiometer on pin 3
+int ESCpin = 6;                          //Servo on pin 9
+int armValue=700;                           // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino. 
+
+
+
+
+
 int pos = 90;
 unsigned long time;
 boolean tt = true;
 int arm_time=1;
 int pulse=1000;
-int enablePin = 6;
+//int enablePin = 6;
 int in1Pin = 4;
 int in2Pin = 7;
 boolean motorrun=false;
@@ -47,7 +56,10 @@ TinyGPSCustom fix(gps, "GPGGA", 6);
 
 double wlat, wlon;
 
-
+void arm(){                                //Arming sequence of sending a minimum or 'joystick zero' for 2 seconds to simulate radio gear is ON and operational.  
+  ESC.write(armValue); 
+  delay(2500); 
+}
 /*
 Function descr here...
 Uses TinyGPS++ lib.
@@ -155,36 +167,14 @@ float getHeading(){
 int setMotor(boolean motorrun)//this part works
 {
  
-int pulse=1250;
+//int pulse=1250;
   if(motorrun){
        
-      Serial.print("Motor status: ");
-      Serial.println(motorrun);
-      digitalWrite(enablePin,HIGH);
-     delayMicroseconds(pulse);
-     digitalWrite(enablePin,LOW);
-     delay(20-(pulse/1000));  
-  //analogWrite(enablePin, speeed);
-  //digitalWrite(in1Pin, !reverse );
-  //digitalWrite(in2Pin, reverse);
+  ESC.write(1000);                      //Send servo position - Motor speed to ESC.
+  Serial.println("motor runing");                     //Send servo 
+  delay(200);                              //pause for 1/10 second.
+  //return();
   }
-}
-
-int motor(boolean test)
-{
-    unsigned long ttt = millis();
-  
-  while (millis() - ttt < 20000) {
-    if(test){
-    Serial.println("Turn the motor");
-    pulse=1250;
-    digitalWrite(enablePin,HIGH);
-    delayMicroseconds(pulse);
-    digitalWrite(enablePin,LOW);
-    //delay(20-(pulse/1000));   
-    }
-  }
-    //loop;
 }
 
 
@@ -192,37 +182,40 @@ void setup() {
   // put your setup code here, to run once:
   //hom =true;
   Serial.begin(115200);
-  ss.begin(9600);
-  
+  //ss.begin(9600);
   Wire.begin();
   compass = HMC5883L(); //new instance of HMC5883L library
   setupHMC5883L(); //setup the HMC5883L
+   
   
-  myservo.attach(SERVO_PIN_A);
-  myservo.write(90);
+  Serial.println("Align rudder");
+  rudder.attach(9);
+  rudder.write(90);
   delay(10);
-  myservo.detach();
+  Serial.println("Rudder done");
+ 
   
-  Serial.println("Start motor ARMING");
-  pinMode(enablePin,OUTPUT);
-  for(arm_time=0;arm_time<500;arm_time +=1)
-  {
-     digitalWrite(enablePin,HIGH);
-     delayMicroseconds(1100);
-     digitalWrite(enablePin,LOW);
-     delay(20-(pulse/1000));
-  }
-  Serial.println("Motor Armed");
 
+ 
+  //rudder.detach();
+  
   waypoint=1;
   motorrun=true;
   
+  Serial.println("Start motor ARMING");
+  ESC.attach(ESCpin);
+  arm();
+  Serial.println("Motor Armed");
+  //delay(10000);
 }
  
 
 
 void loop() {
   
+//  ESC.write(800);                      //Send servo position - Motor speed to ESC.
+//  Serial.println("motor runing");                     //Send servo 
+//  delay(100);
  // motor(tt);
  //time = millis();
  //Serial.println(time);
@@ -280,7 +273,8 @@ void loop() {
     wlon = 73.542977;
     //return;
   }
-  
+   
+   //comment above for debug. below part ok
   double dit2way = calc_distKm(wlat, wlon);
   Serial.print("Distance to waypoint: ");
   Serial.println(dit2way);
@@ -288,11 +282,14 @@ void loop() {
   double cou2way = calc_course(wlat, wlon);
   Serial.print("GPS Bearing to waypoint: ");
   Serial.println(cou2way);
-  
+ 
   int heading = getHeading();
   Serial.print("Compass data: ");
   Serial.println(heading);
   
+//  double dit2way;
+//  double cou2way;
+//  int heading;
       //int angle = getDegrees();cou2way
       int error1 = cou2way - heading;
       if (error1 >= 180)
@@ -304,17 +301,21 @@ void loop() {
         error1 = 60;
       if (error1 < -60)
         error1 = -60;
-      myservo.detach(); 
-      myservo.attach(SERVO_PIN_A);
-      myservo.write(100  + error1);
-      delay(10);
+     // rudder.detach(); 
+      rudder.attach(9);
+      rudder.write(100  + error1);
+      delay(1);
+      
+ // ESC.write(800);                      //Send servo position - Motor speed to ESC.
+  //Serial.println("motor runing");                     //Send servo 
+ // delay(100);
  
- unsigned long ttt = millis();
+ //unsigned long ttt = millis();
   
-  while (millis() - ttt < 100) {     
+ // while (millis() - ttt < 100) {     
   if(motorrun==false){//this part works
     setMotor(false);
-  //myservo.detach(); 
+  //rudder.detach(); 
   }
     else if (motorrun==true){
     setMotor(true);
@@ -323,6 +324,6 @@ void loop() {
   //else{
   //setMotor(false);
   }
-  }
+ // }
 }
 
