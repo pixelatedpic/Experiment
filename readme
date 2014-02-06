@@ -17,3 +17,7 @@ http://reprap.org/wiki/Gen7_Board_1.3.1#Programming_the_bootloader_using_Arduino
 http://ot-hobbies.com/resource/ard-1284.htm
 http://nathan.chantrell.net/20120811/using-the-atmega1284p-with-the-arduino-ide-wiz820io/
 http://maniacbug.wordpress.com/2011/11/27/arduino-on-atmega1284p-4/
+
+
+avrdude: stk500_set_extended_parms(): protocol error, expect=0x14, resp=0x45
+avrdude: stk500_initialize(): failed
