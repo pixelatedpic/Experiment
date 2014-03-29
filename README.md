@@ -10,3 +10,5 @@ waypoints are able to read from SD card and load line by line to an array. Next 
 
 http://www.rcgroups.com/forums/showthread.php?t=1473207
 http://www.movable-type.co.uk/scripts/latlong.html
+
+http://blog.mostlyrobots.net/tag/autonomous-vehicle/
