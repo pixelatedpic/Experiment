@@ -25,3 +25,5 @@ avrdude: stk500_initialize(): failed
 
 http://www.bajdi.com/bajduino-1284/
 https://github.com/maniacbug/mighty-1284p
+http://www.buildcircuit.com/how-to-use-rf-module-with-arduino/
+https://www.sparkfun.com/datasheets/RF/KLP_Walkthrough.pdf
