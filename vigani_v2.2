@@ -267,7 +267,7 @@ double calc_distKm(const double wlat, const double wlon) {
     //Serial.println();
     //Serial.print(disttodest);
     //disttodest<1;
-  if (disttodest)//9 meter radius
+  if (disttodest <2)//2 meter radius
     {
         ESCval = 1166;
         //Serial.println("DROP SPEED");
@@ -407,7 +407,7 @@ void loop() {
   feedGPS();
   fixed = fix.value();
 //&& fixed >="1"
-  if (homei==false){
+  if (homei==false && fixed >="1"){
   //Serial.println("fixed");
   //Serial.print("current waypoint: ");
   Serial.print("$");
