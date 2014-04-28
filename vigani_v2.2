@@ -5,17 +5,15 @@
 #include <HMC5883L.h>
 #include <TinyGPS++.h>
 
+//#define DEBUG //comment this to disable printing the debug information :)
+
 TinyGPSPlus gps;
 HMC5883L compass;
 Servo ESC;  
 Servo rudder;
 int ESCpin = 13;                          //Servo on pin 9
 int armValue=800;                           // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino. 
-int pos = 90;
 unsigned long time;
-boolean tt = true;
-int arm_time=1;
-int pulse=1000;
 boolean motorrun=false;
 int speed;
 boolean reverse=false;
@@ -24,8 +22,6 @@ File waypoints;
 char c=0;
 char byteRead;
 int tot_wps_infile;
-int blah=1;
-int blah2=1;
 double lat_gps;
 double lon_gps;
 String fix_gps;
@@ -47,15 +43,25 @@ void JusterRor()
       String returned_wp;
       returned_wp = locate_wp(waypoint);
 
-      String  latdff = returned_wp.substring(2,10);
+      String  latdff = returned_wp.substring(0,8);
+      #ifdef DEBUG
+      Serial.print("file lat: ");
+      Serial.println(latdff);
+      #endif
       char latbuf[latdff.length()];
       latdff.toCharArray(latbuf,latdff.length());
       double dlat =atof(latbuf);
+
       
-      String  londff = returned_wp.substring(11,20);
+      String  londff = returned_wp.substring(9,18);
+      #ifdef DEBUG
+      Serial.print("file lon: ");
+      Serial.println(londff);
+      #endif
       char lonbuf[londff.length()];
       londff.toCharArray(lonbuf,londff.length());
       double dlon =atof(lonbuf);
+
       
       double dit2way = calc_distKm(dlat,dlon );
       //Serial.print("Distance to waypoint: ");
@@ -73,7 +79,7 @@ void JusterRor()
       Heading = cou2way - comp_head;
       
       //old code 
-     /* 
+       /* 
       if (Heading >= 180)
         Heading -= 360;
       if (Heading <= -180)
@@ -125,8 +131,8 @@ String locate_wp(int needed_wp){
   String lat_lon="";
   int curr_line=0;
   
-  if (SD.exists("test.txt")) { //checking if the file exists
-    waypoints = SD.open("test.txt",FILE_READ);
+  if (SD.exists("wp.txt")) { //checking if the file exists
+    waypoints = SD.open("wp.txt",FILE_READ);
     
     while(waypoints.available()) {
      c = waypoints.read();
@@ -155,7 +161,9 @@ String locate_wp(int needed_wp){
     }
 
   } else {
-      //Serial.println(F("Could not open the file"));
+      #ifdef DEBUG
+      Serial.println(F("Could not open the file"));
+      #endif
   } 
 }
 
@@ -259,7 +267,7 @@ double calc_distKm(const double wlat, const double wlon) {
     //Serial.println();
     //Serial.print(disttodest);
     //disttodest<1;
-  if (disttodest <2)//9 meter radius
+  if (disttodest)//9 meter radius
     {
         ESCval = 1166;
         //Serial.println("DROP SPEED");
@@ -267,7 +275,11 @@ double calc_distKm(const double wlat, const double wlon) {
         homei = true;
         motorrun = false;
         ESC.write(600);
-        //Serial.println("END OF TRIP");
+        
+        #ifdef DEBUG
+        Serial.println("END OF TRIP");
+        #endif
+        
       }
       waypoint++;
     } 
@@ -338,9 +350,10 @@ void setup() {
   
   //Serial.println(F("Calculating total WPs ..."));
   tot_wps_infile = total_wps();
-  //Serial.print(F("Total WPS in file = "));
-  //Serial.println(tot_wps_infile);
-  //Serial.println();
+  #ifdef DEBUG
+  Serial.print(F("Total WPS in file = "));
+  Serial.println(tot_wps_infile);
+  #endif
   
   delay(500);
   
@@ -352,7 +365,9 @@ void setup() {
     log_file.flush();
     log_file.close();
   } else {
-    //Serial.println(F("Couldn't open log (aquired GPS) file"));
+    #ifdef DEBUG
+    Serial.println(F("Couldn't open log (aquired GPS) file"));
+    #endif
   }
   
   //Serial.println("Align rudder");
@@ -392,7 +407,7 @@ void loop() {
   feedGPS();
   fixed = fix.value();
 //&& fixed >="1"
-  if (homei==false && fixed >="1"){
+  if (homei==false){
   //Serial.println("fixed");
   //Serial.print("current waypoint: ");
   Serial.print("$");
