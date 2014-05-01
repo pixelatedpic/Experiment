@@ -106,25 +106,27 @@ void JusterRor()
         {
           if (Heading > 0 && Heading <=90)
            {
-              ServoPos = map(Heading,0,90,90,140);
+              ServoPos = map(Heading,0,90,90,147);
            } else {
              ServoPos = 150;
            }
-         } else {
-           if (Heading > 270 && Heading <= 360)
+         } 
+      else 
+      {
+          if (Heading > 270 && Heading <= 360)
             {
-               ServoPos = map(Heading,270,360,40,90);
+               ServoPos = map(Heading,270,360,33,90);
             } else {
                ServoPos = 30;
             }
-         } 
+       } 
     
       rudder.write(ServoPos);
       Serial.print(rudder.read());
       Serial.print(",");
       Serial.print(gps.speed.knots());
       Serial.println(";");
-      delay(5);
+      //delay(1);
 }
 
 String locate_wp(int needed_wp){
@@ -267,9 +269,9 @@ double calc_distKm(const double wlat, const double wlon) {
     //Serial.println();
     //Serial.print(disttodest);
     //disttodest<1;
-  if (disttodest <2)//2 meter radius
+  if (disttodest <3)//2 meter radius
     {
-        ESCval = 1166;
+        //ESCval = 1166;
         //Serial.println("DROP SPEED");
       if(tot_wps_infile==waypoint){
         homei = true;
@@ -283,10 +285,10 @@ double calc_distKm(const double wlat, const double wlon) {
       }
       waypoint++;
     } 
-    else if (disttodest >2)
-      {
-        ESCval = 1200;
-      }
+//    else if (disttodest >2)
+//      {
+//        ESCval = 1200;
+//      }
     return disttodest;
 }
 
@@ -385,7 +387,7 @@ void setup() {
   arm();
   //Serial.println("Motor Armed");
   
-  ESCval = 1166;
+  ESCval = 1250;
   //delay(10000);
   
   
