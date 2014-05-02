@@ -31,6 +31,10 @@ boolean homei = false;
 double wlat, wlon;
 double dlat,dlon;
 int ESCval;
+double WP_Radius = 3; // radius which select next waypoint and compute
+
+
+
 TinyGPSCustom ellipsoidalHeight(gps, "GPGGA", 11);
 TinyGPSCustom h_dop(gps, "GPGGA", 8);
 TinyGPSCustom northing(gps, "GPGGA", 3);
@@ -471,13 +475,13 @@ void loop() {
   }
     //SD_WP_Read(); //read Lat and Lon from th SD card to compute
     Steering();
-    double dit2way = calc_distKm(dlat,dlon );
+    double DIS_TO_WP = calc_distKm(dlat,dlon );
     #ifdef DEBUG
     Serial.print("Distance to waypoint: ");
-    Serial.println(dit2way);  
+    Serial.println(DIS_TO_WP);  
     #endif
     
-    if (dit2way <3)//3 meter radius
+    if (DIS_TO_WP < WP_Radius)//check the distance is less than WP_Radius
     {
         //ESCval = 1166;
         //Serial.println("DROP SPEED");
