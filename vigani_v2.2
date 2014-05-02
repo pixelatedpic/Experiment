@@ -5,7 +5,8 @@
 #include <HMC5883L.h>
 #include <TinyGPS++.h>
 
-//#define DEBUG //comment this to disable printing the debug information :)
+#define DEBUG //comment this to disable printing the debug information :)
+//#define DEBUG1 //comment this to disable printing the debug information :)
 
 TinyGPSPlus gps;
 HMC5883L compass;
@@ -28,6 +29,7 @@ String fix_gps;
 int waypoint;
 boolean homei = false;
 double wlat, wlon;
+double dlat,dlon;
 int ESCval;
 TinyGPSCustom ellipsoidalHeight(gps, "GPGGA", 11);
 TinyGPSCustom h_dop(gps, "GPGGA", 8);
@@ -35,47 +37,77 @@ TinyGPSCustom northing(gps, "GPGGA", 3);
 TinyGPSCustom easting(gps, "GPGGA", 5);
 TinyGPSCustom fix(gps, "GPGGA", 6);
 
-void JusterRor()
-{
-      int ServoPos = 0;
-      int Heading;
-  
+
+void SD_WP_Read()//read a specific waypoint lat,lon from SD card.
+  {
       String returned_wp;
       returned_wp = locate_wp(waypoint);
 
       String  latdff = returned_wp.substring(0,8);
-      #ifdef DEBUG
+      #ifdef DEBUG1
       Serial.print("file lat: ");
       Serial.println(latdff);
       #endif
       char latbuf[latdff.length()];
       latdff.toCharArray(latbuf,latdff.length());
-      double dlat =atof(latbuf);
+      dlat =atof(latbuf);
 
       
       String  londff = returned_wp.substring(9,18);
-      #ifdef DEBUG
+      #ifdef DEBUG1
       Serial.print("file lon: ");
       Serial.println(londff);
       #endif
       char lonbuf[londff.length()];
       londff.toCharArray(lonbuf,londff.length());
-      double dlon =atof(lonbuf);
+      dlon =atof(lonbuf);
+  }
+  
+void Steering()
+{
+      int ServoPos = 0;
+      int Heading;
+      
+      SD_WP_Read();// get Waypoint lat,lon from SD
+      
+//      String returned_wp;
+//      returned_wp = locate_wp(waypoint);
+//
+//      String  latdff = returned_wp.substring(0,8);
+      #ifdef DEBUG
+      Serial.print("file lat: ");
+      Serial.println(dlat);
+      #endif
+//      char latbuf[latdff.length()];
+//      latdff.toCharArray(latbuf,latdff.length());
+//      double dlat =atof(latbuf);
+//
+//      
+//      String  londff = returned_wp.substring(9,18);
+      #ifdef DEBUG
+      Serial.print("file lon: ");
+      Serial.println(dlon);
+      #endif
+//      char lonbuf[londff.length()];
+//      londff.toCharArray(lonbuf,londff.length());
+//      double dlon =atof(lonbuf);
 
       
-      double dit2way = calc_distKm(dlat,dlon );
-      //Serial.print("Distance to waypoint: ");
-      Serial.print(dit2way);
-      Serial.print(",");
+//      double dit2way = calc_distKm(dlat,dlon );
+//      //Serial.print("Distance to waypoint: ");
+//      Serial.print(dit2way);
+//      Serial.print(",");
       int cou2way = calc_course(dlat, dlon);
-      //Serial.print("GPS Bearing to waypoint: ");
-      Serial.print(cou2way);
-      Serial.print(",");
+      #ifdef DEBUG
+      Serial.print("GPS course to WP: ");
+      Serial.println(cou2way);
+      #endif
      
-      int comp_head = getHeading();
-      //Serial.print("Compass data: ");
-      Serial.print(comp_head);
-      Serial.print(",");
+      int comp_head = getHeading();// get compass heading
+      #ifdef DEBUG
+      Serial.print("Compass data: ");
+      Serial.println(comp_head);
+      #endif
       Heading = cou2way - comp_head;
       
       //old code 
@@ -122,10 +154,12 @@ void JusterRor()
        } 
     
       rudder.write(ServoPos);
-      Serial.print(rudder.read());
-      Serial.print(",");
-      Serial.print(gps.speed.knots());
-      Serial.println(";");
+      #ifdef DEBUG
+      Serial.print("Value to servo: ");
+      Serial.println(rudder.read());
+      #endif
+//      Serial.print(gps.speed.knots());
+//      Serial.println(";");
       //delay(1);
 }
 
@@ -200,22 +234,26 @@ bool feedGPS() {
 }
 
 
-void getcurGPS() {
-  
-  feedGPS();
-  fix_gps = fix.value();
-  //Serial.println(fix_gps);
-  if (fix_gps>="1")
- {
-   
+  void getcurGPS()
+  {
+    
     feedGPS();
-    if (gps.location.isUpdated()) {
-    lat_gps = gps.location.lat();
-    lon_gps = gps.location.lng();
-    write_points(gps.date.value(),gps.time.value(),gps.satellites.value(),h_dop.value(),gps.location.lat(),northing.value(),gps.location.lng(),easting.value(),ellipsoidalHeight.value(),gps.speed.knots());
-    } 
-}
-}
+    fix_gps = fix.value();
+    //Serial.println(fix_gps);
+    if (fix_gps>="1")
+    {
+     
+      feedGPS();
+      if (gps.location.isUpdated())
+      {
+      lat_gps = gps.location.lat();
+      lon_gps = gps.location.lng();
+      write_points(gps.date.value(),gps.time.value(),gps.satellites.value(),h_dop.value(),gps.location.lat(),northing.value(),gps.location.lng(),easting.value(),ellipsoidalHeight.value(),gps.speed.knots());
+      } 
+    }
+  }
+
+
 void write_points(double write_date, double write_time, int write_sats, const char *write_hdop, double write_lat, const char *write_northing, double write_lon, const char *write_easting, const char *write_elipsheight, double write_speed) {
   File log_file = SD.open("abc.csv", FILE_WRITE);
   if (log_file) {
@@ -241,7 +279,7 @@ void write_points(double write_date, double write_time, int write_sats, const ch
     log_file.close();
   }
 }
-
+// Course to the next waypoint from current GPS possiion
 double calc_course(const double wlat, const double wlon) {
     //const double DEST_LAT = 4.2029716;
     //const double DEST_LON = 73.231562;
@@ -269,22 +307,22 @@ double calc_distKm(const double wlat, const double wlon) {
     //Serial.println();
     //Serial.print(disttodest);
     //disttodest<1;
-  if (disttodest <3)//2 meter radius
-    {
-        //ESCval = 1166;
-        //Serial.println("DROP SPEED");
-      if(tot_wps_infile==waypoint){
-        homei = true;
-        motorrun = false;
-        ESC.write(600);
-        
-        #ifdef DEBUG
-        Serial.println("END OF TRIP");
-        #endif
-        
-      }
-      waypoint++;
-    } 
+//  if (disttodest <3)//2 meter radius
+//    {
+//        //ESCval = 1166;
+//        //Serial.println("DROP SPEED");
+//      if(tot_wps_infile==waypoint){
+//        homei = true;
+//        motorrun = false;
+//        ESC.write(600);
+//        
+//        #ifdef DEBUG
+//        Serial.println("END OF TRIP");
+//        #endif
+//        
+//      }
+//      waypoint++;
+//    } 
 //    else if (disttodest >2)
 //      {
 //        ESCval = 1200;
@@ -412,24 +450,50 @@ void loop() {
   if (homei==false && fixed >="1"){
   //Serial.println("fixed");
   //Serial.print("current waypoint: ");
-  Serial.print("$");
-  Serial.print(gps.date.value());
-  Serial.print(",");
-  Serial.print(gps.time.value());
-  Serial.print(",");
-  Serial.print(waypoint);  
-  Serial.print(",");
+//  Serial.print("$");
+//  Serial.print(gps.date.value());
+//  Serial.print(",");
+//  Serial.print(gps.time.value());
+//  Serial.print(",");
+  #ifdef DEBUG
+  Serial.print("current waypoint: ");
+  Serial.println(waypoint);  
+  #endif
   
   if (newdata) {
     getcurGPS();
-    //Serial.print("GPS LAT: ");
-    Serial.print(lat_gps,6);
-    Serial.print(",");
-    //Serial.print("GPS LON: ");
-    Serial.print(lon_gps,6);
-    Serial.print(",");    
+    #ifdef DEBUG
+    Serial.print("GPS LAT: ");
+    Serial.println(lat_gps,6);
+    Serial.print("GPS LON: ");
+    Serial.println(lon_gps,6);
+    #endif
   }
-    JusterRor();
+    //SD_WP_Read(); //read Lat and Lon from th SD card to compute
+    Steering();
+    double dit2way = calc_distKm(dlat,dlon );
+    #ifdef DEBUG
+    Serial.print("Distance to waypoint: ");
+    Serial.println(dit2way);  
+    #endif
+    
+    if (dit2way <3)//3 meter radius
+    {
+        //ESCval = 1166;
+        //Serial.println("DROP SPEED");
+      if(tot_wps_infile==waypoint)
+      {
+        homei = true;
+        motorrun = false;
+        ESC.write(600);//stops motor
+        
+        #ifdef DEBUG
+        Serial.println("END OF TRIP");
+        #endif  
+      }
+      
+      waypoint++;
+    }
     
   //this part works
   if(motorrun==false)
