@@ -13,7 +13,8 @@ HMC5883L compass;
 Servo ESC;  
 Servo rudder;
 int ESCpin = 13;                          //Servo on pin 9
-int armValue=800;                           // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino. 
+int armValue=800;                           // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino.
+
 unsigned long time;
 boolean motorrun=false;
 int speed;
@@ -47,7 +48,7 @@ void SD_WP_Read()//read a specific waypoint lat,lon from SD card.
       String returned_wp;
       returned_wp = locate_wp(waypoint);
 
-      String  latdff = returned_wp.substring(0,8);
+      String  latdff = returned_wp.substring(0,8);//read the line and take out what we need
       #ifdef DEBUG1
       Serial.print("file lat: ");
       Serial.println(latdff);
@@ -168,43 +169,47 @@ void Steering()
 }
 
 String locate_wp(int needed_wp){
-  String lat_lon="";
-  int curr_line=0;
-  
-  if (SD.exists("wp.txt")) { //checking if the file exists
-    waypoints = SD.open("wp.txt",FILE_READ);
+    String lat_lon="";
+    int curr_line=0;
     
-    while(waypoints.available()) {
-     c = waypoints.read();
-     
-     if(c=='\n') {
-       curr_line++;
-     }
-     
-     if (curr_line == needed_wp) {
-       lat_lon += c;
-       lat_lon.trim();
-       
-       if(c==';') {
-         waypoints.flush();
-         waypoints.close();
-         return lat_lon;
-       }
+    if (SD.exists("wp.txt")) { //checking if the file exists
+      waypoints = SD.open("wp.txt",FILE_READ);
+      
+      while(waypoints.available())
+      {
+         c = waypoints.read();
+         
+         if(c=='\n')
+         {
+             curr_line++;
+         }
+         
+         if (curr_line == needed_wp)
+            {
+               lat_lon += c;
+               lat_lon.trim();
+               
+               if(c==';')
+               {
+                 waypoints.flush();
+                 waypoints.close();
+                 return lat_lon;
+               }
+            }
       }
-    }
-    waypoints.flush();
-    waypoints.close();
-    
-    if (!waypoints.available()) {
-      lat_lon="NMWPS";
-      return lat_lon;
-    }
-
-  } else {
-      #ifdef DEBUG
-      Serial.println(F("Could not open the file"));
-      #endif
-  } 
+      waypoints.flush();
+      waypoints.close();
+      
+      if (!waypoints.available()) {
+        lat_lon="NMWPS";
+        return lat_lon;
+      }
+  
+    } else {
+        #ifdef DEBUG
+        Serial.println(F("Could not open the file"));
+        #endif
+    } 
 }
 
 /*
@@ -212,18 +217,22 @@ Counts the total wap points in given file.
 Uses locate_wp() function.
 Returns count (type int).
 */
-int total_wps(){
-  int total_wps;
-  for (total_wps=0; total_wps<=1000; total_wps++) {
-    String check_wp;
-    check_wp = locate_wp(total_wps);
-    if (check_wp == "NMWPS") {
-      return total_wps;
+int total_wps()
+{
+    int total_wps;
+    for (total_wps=0; total_wps<=1000; total_wps++)
+    {
+        String check_wp;
+        check_wp = locate_wp(total_wps);
+        if (check_wp == "NMWPS")
+        {
+          return total_wps;
+        }
     }
-  }
 }
 
-void arm(){//Arming 
+void arm()
+{//Arming 
   ESC.write(armValue); 
   delay(2500); 
 }
@@ -302,12 +311,7 @@ double calc_course(const double wlat, const double wlon) {
 double calc_distKm(const double wlat, const double wlon) {
     //const double DEST_LAT = 4.2029716;
     //const double DEST_LON = 73.231562;
-    double disttodest =
-      gps.distanceBetween(
-        lat_gps,
-        lon_gps,
-        wlat,
-        wlon) ;/// 1000.0;
+    double disttodest = gps.distanceBetween(lat_gps,lon_gps,wlat,wlon) ;/// 1000.0;
     //Serial.println();
     //Serial.print(disttodest);
     //disttodest<1;
