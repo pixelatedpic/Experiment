@@ -31,3 +31,7 @@ https://sites.google.com/site/summerfuelrobots/arduino-sensor-tutorials/rf-wirel
   
   String lati = "4.343433";
   double strtod (const char* lati, char** endptr);
+http://letsmakerobots.com/content/arduino-101-timers-and-interrupts
+http://forum.arduino.cc/index.php?topic=122065.0
+http://www.righto.com/2009/07/secrets-of-arduino-pwm.html
+http://www.instructables.com/id/RC-Quadrotor-Helicopter/step13/Arduino-Demo-PWM-Output/
