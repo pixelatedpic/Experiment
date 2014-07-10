@@ -9,8 +9,8 @@
 #include <HMC5883L.h>
 #include <TinyGPS++.h>
 
-//#define DEBUG //comment this to disable printing the debug information :)
-//#define DEBUG1 //comment this to disable printing the debug information :)
+#define DEBUG //comment this to disable printing the debug information :)
+#define DEBUG1 //comment this to disable printing the debug information :)
 
 TinyGPSPlus gps;
 HMC5883L compass;
@@ -40,7 +40,7 @@ boolean homei = false;
 double wlat, wlon;
 double dlat,dlon;
 int ESCval;
-double WP_Radius = 2; // radius which select next waypoint and compute
+double WP_Radius = 3; // radius which select next waypoint and compute
 //battery current and voltage
 float involt = 0;
 float average = 0;
@@ -477,7 +477,7 @@ void setup() {
   arm();
   //Serial.println("Motor Armed");
   //delay(1000);
-  ESCval = 1300;//full speed
+  ESCval = 1350;//full speed
   
 }
  
@@ -495,7 +495,7 @@ void loop() {
   }
   feedGPS();
   fixed = fix.value();
-  SendData();
+  //SendData();
 //&& fixed >="1"
   if (homei==false && fixed >="1"){
     //VA_meter();
@@ -545,7 +545,7 @@ void loop() {
     }
     else if (DIS_TO_WP > WP_Radius)
       {
-        ESCval = 1300;
+        ESCval = 1350;
        // Serial.println("NORMAL SPEED");
       }
     Steering();
