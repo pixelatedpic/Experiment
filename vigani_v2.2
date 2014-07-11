@@ -1,7 +1,5 @@
-//#include <MD5.h>
-
-//#include <TimerThree.h>
-
+//PROJECT "VIGANI" AUTONOMOUS BOAT
+//STARTED ON 2013
 #include <SD.h>
 #include <SPI.h>
 #include <Servo.h>
@@ -12,12 +10,16 @@
 #define DEBUG //comment this to disable printing the debug information :)
 #define DEBUG1 //comment this to disable printing the debug information :)
 
+#define ESCpin 13
+#define armValue 800
+
+
 TinyGPSPlus gps;
 HMC5883L compass;
 Servo ESC;  
 Servo rudder;
-int ESCpin = 13;                          //Servo on pin 9
-int armValue=800;  // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino.
+//int ESCpin = 13;                          //Servo on pin 9
+//int armValue=800;  // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino.
 int error = 0;
 unsigned long time;
 boolean motorrun=false;
@@ -60,168 +62,124 @@ TinyGPSCustom fix(gps, "GPGGA", 6);
 
 void SendData()
 {
-      //waypoint;lat;lon;distance;course;heading;speed
-      //String t = waypoint+lat_gps;
-      //unsigned char* hash=MD5::make_hash("s"+waypoint);
-//      char buffer[8];
-//      sprintf(buffer,"%d",(double)lat_gps);
-      Serial.print(waypoint);
-      Serial.write(",");
-      Serial.print(lat_gps,6);
-      Serial.write(",");
-      Serial.print(lon_gps,6);
-      Serial.write(",");
-      Serial.print(DIS_TO_WP);
-      Serial.write(",");
-      Serial.print(cou2way);
-      Serial.write(",");
-      Serial.print(comp_head);
-      Serial.write(",");
-      Serial.print(Speed_gps);
-      Serial.write("\n");
+
+	Serial.print("#$");
+	Serial.write(",");
+	Serial.print(waypoint);
+	Serial.write(",");
+	Serial.print(lat_gps,6);
+	Serial.write(",");
+	Serial.print(lon_gps,6);
+	Serial.write(",");
+	Serial.print(DIS_TO_WP);
+	Serial.write(",");
+	Serial.print(cou2way);
+	Serial.write(",");
+	Serial.print(comp_head);
+	Serial.write(",");
+	Serial.print(Speed_gps);
+	Serial.write("\n");
 }
 void VA_meter()
 {
     
-    for(int i = 0; i < 150; i++) {
-        involt = analogRead(A0);
-        involt = (involt / 1024) * 5.0;
-        battery = involt / (R2/(R1+R2));
-    }
+	for(int i = 0; i < 150; i++)
+	{
+		involt = analogRead(A0);
+		involt = (involt / 1024) * 5.0;
+		battery = involt / (R2/(R1+R2));
+	}
 
-    
-    for(int i=0;i<150;i++)
-    {
-      average+=analogRead(A1); //read the current from sensor
-      }
-      average=average/150;
-      val =(5*average)/1024.0;
-      actualval =val-2.5; // offset voltage is 2.5v
-      amps =actualval*10;
-      delay(2);
+
+	for(int i=0;i<150;i++)
+	{
+		average+=analogRead(A1); //read the current from sensor
+	}
+		average=average/150;
+		val =(5*average)/1024.0;
+		actualval =val-2.5; // offset voltage is 2.5v
+		amps =actualval*10;
+		delay(2);
 }
 
 void SD_WP_Read()//read a specific waypoint lat,lon from SD card.
-  {
-      String returned_wp;
-      returned_wp = locate_wp(waypoint);
+{
+	String returned_wp;
+	returned_wp = locate_wp(waypoint);
 
-      String  latdff = returned_wp.substring(0,8);//read the line and take out what we need
-      char latbuf[latdff.length()];
-      latdff.toCharArray(latbuf,latdff.length());
-      dlat =atof(latbuf);
+	String  latdff = returned_wp.substring(0,8);//read the line and take out what we need
+	char latbuf[latdff.length()];
+	latdff.toCharArray(latbuf,latdff.length());
+	dlat =atof(latbuf);
 
-      
-      String  londff = returned_wp.substring(9,18);
-      char lonbuf[londff.length()];
-      londff.toCharArray(lonbuf,londff.length());
-      dlon =atof(lonbuf);
-      
-      #ifdef DEBUG1
-      Serial.print("file lat: ");
-      Serial.println(latdff);
-      Serial.print("file lon: ");
-      Serial.println(londff);
-      #endif
-  }
+
+	String  londff = returned_wp.substring(9,18);
+	char lonbuf[londff.length()];
+	londff.toCharArray(lonbuf,londff.length());
+	dlon =atof(lonbuf);
+
+	#ifdef DEBUG1
+	Serial.print("file lat: ");
+	Serial.println(latdff);
+	Serial.print("file lon: ");
+	Serial.println(londff);
+	#endif
+}
   
 void Steering()
 {
-      int ServoPos = 0;
-      int Heading;
-      
-      SD_WP_Read();// get Waypoint lat,lon from SD
-      
-//      String returned_wp;
-//      returned_wp = locate_wp(waypoint);
-//
-//      String  latdff = returned_wp.substring(0,8);
+	int ServoPos = 0;
+	int Heading;
 
+	SD_WP_Read();// get Waypoint lat,lon from SD
 
-//      char latbuf[latdff.length()];
-//      latdff.toCharArray(latbuf,latdff.length());
-//      double dlat =atof(latbuf);
-//
-//      
-//      String  londff = returned_wp.substring(9,18);
-      #ifdef DEBUG1
-      Serial.print("Double lat: ");
-      Serial.println(dlat);
-      Serial.print("Double lon: ");
-      Serial.println(dlon);
-      #endif
-//      char lonbuf[londff.length()];
-//      londff.toCharArray(lonbuf,londff.length());
-//      double dlon =atof(lonbuf);
+	#ifdef DEBUG1
+	Serial.print("Double lat: ");
+	Serial.println(dlat);
+	Serial.print("Double lon: ");
+	Serial.println(dlon);
+	#endif
 
-      
-//      double dit2way = calc_distKm(dlat,dlon );
-//      //Serial.print("Distance to waypoint: ");
-//      Serial.print(dit2way);
-//      Serial.print(",");
-      cou2way = calc_course(dlat, dlon);
-      comp_head = getHeading();// get compass heading
-      Heading = cou2way - comp_head;
-      
-      #ifdef DEBUG
-      Serial.print("GPS course to WP: ");
-      Serial.println(cou2way);
-      Serial.print("Compass data: ");
-      Serial.println(comp_head);
-      Serial.print("GPS-WP-Head - Compass data: ");
-      Serial.println(Heading);
-      #endif
-      //old code 
-       /* 
-      if (Heading >= 180)
-        Heading -= 360;
-      if (Heading <= -180)
-        Heading += 360;
-      // Update servo and keep with range of +/- 60
-      if (Heading > 60)
-        Heading = 60;
-      if (Heading < -60)
-        Heading = -60;
-      
-      //rudder.attach(12);
-      int tr = rudder.read();
-      rudder.write(90+Heading);
-      Serial.print(rudder.read());
-      Serial.print(",");
-      Serial.print(gps.speed.knots());
-      Serial.println(";");
-      delay(1);*/
-      //old code end
+	cou2way = calc_course(dlat, dlon);
+	comp_head = getHeading();// get compass heading
+	Heading = cou2way - comp_head;
 
-      if (Heading < 0) Heading += 360;
-      
-      if (Heading > 0 && Heading <=180)
-        {
-          if (Heading > 0 && Heading <=90)
-           {
-              ServoPos = map(Heading,0,90,90,147);
-           } else {
-             ServoPos = 150;
-           }
-         } 
-      else 
-      {
-          if (Heading > 270 && Heading <= 360)
-            {
-               ServoPos = map(Heading,270,360,33,90);
-            } else {
-               ServoPos = 30;
-            }
-       } 
-    
-      rudder.write(ServoPos);
-      #ifdef DEBUG
-      Serial.print("Value to servo: ");
-      Serial.println(rudder.read());
-      #endif
-//      Serial.print(gps.speed.knots());
-//      Serial.println(";");
-      //delay(1);
+	#ifdef DEBUG
+	Serial.print("GPS course to WP: ");
+	Serial.println(cou2way);
+	Serial.print("Compass data: ");
+	Serial.println(comp_head);
+	Serial.print("GPS-WP-Head - Compass data: ");
+	Serial.println(Heading);
+	#endif
+
+	if (Heading < 0) Heading += 360;
+
+	if (Heading > 0 && Heading <=180)
+	{
+	  if (Heading > 0 && Heading <=90)
+	   {
+		 ServoPos = map(Heading,0,90,90,147);
+	   } else {
+		 ServoPos = 150;
+	   }
+	 } 
+	else 
+	{
+	  if (Heading > 270 && Heading <= 360)
+		{
+		  ServoPos = map(Heading,270,360,33,90);
+		} else {
+		  ServoPos = 30;
+		}
+	} 
+
+	rudder.write(ServoPos);
+	#ifdef DEBUG
+	Serial.print("Value to servo: ");
+	Serial.println(rudder.read());
+	#endif
+
 }
 
 String locate_wp(int needed_wp){
@@ -282,202 +240,185 @@ int total_wps(){
 //Arming ESC
 void arm()
 {
-  ESC.write(armValue); 
-  delay(2500); 
+	ESC.write(armValue); 
+	delay(2500); 
 }
 
-bool feedGPS() {
-  while (Serial1.available()) {
-    if (gps.encode(Serial1.read())) {
-      return true;    
-    }
-  }
-  return false;
+bool feedGPS()
+{
+	while (Serial1.available())
+	{
+		if (gps.encode(Serial1.read()))
+		{
+		return true;    
+		}
+	}
+	return false;
 }
 
 
 void getcurGPS()
-  {
-    
-    feedGPS();
-    fix_gps = fix.value();
-    //Serial.println(fix_gps);
-    if (fix_gps>="1")
-    {
-     
-      feedGPS();
-      if (gps.location.isUpdated())
-      {
-      lat_gps = gps.location.lat();
-      lon_gps = gps.location.lng();
-      Speed_gps =gps.speed.knots();
-      write_points(gps.date.value(),gps.time.value(),gps.satellites.value(),h_dop.value(),gps.location.lat(),northing.value(),gps.location.lng(),easting.value(),ellipsoidalHeight.value(),gps.speed.knots());
-      } 
-    }
-  }
+{
+
+	feedGPS();
+	fix_gps = fix.value();
+	//Serial.println(fix_gps);
+	if (fix_gps>="1")
+	{
+		feedGPS();
+		if (gps.location.isUpdated())
+	{
+		lat_gps = gps.location.lat();
+		lon_gps = gps.location.lng();
+		Speed_gps =gps.speed.knots();
+		write_points(gps.date.value(),gps.time.value(),gps.satellites.value(),h_dop.value(),gps.location.lat(),northing.value(),gps.location.lng(),easting.value(),ellipsoidalHeight.value(),gps.speed.knots());
+	} 
+	}
+}
 
 
 void write_points(double write_date, double write_time, int write_sats, const char *write_hdop, double write_lat, const char *write_northing, double write_lon, const char *write_easting, const char *write_elipsheight, double write_speed) {
-  File log_file = SD.open("abc.csv", FILE_WRITE);
-  if (log_file) {
-    log_file.print(write_date);
-    log_file.print('_');
-    log_file.print(write_time);
-    log_file.print(',');
-    log_file.print(write_sats);
-    log_file.print(',');
-    log_file.print(write_hdop);
-    log_file.print(',');
-    log_file.print(write_lat,6);
-    log_file.print(',');
-    log_file.print(write_northing);
-    log_file.print(',');
-    log_file.print(write_lon,6);
-    log_file.print(',');
-    log_file.print(write_easting);
-    log_file.print(',');
-    log_file.print(write_elipsheight);
-    log_file.print(',');
-    log_file.println(write_speed);
-    log_file.close();
-  }
+	File log_file = SD.open("abc.csv", FILE_WRITE);
+	if (log_file)
+	{
+		log_file.print(write_date);
+		log_file.print('_');
+		log_file.print(write_time);
+		log_file.print(',');
+		log_file.print(write_sats);
+		log_file.print(',');
+		log_file.print(write_hdop);
+		log_file.print(',');
+		log_file.print(write_lat,6);
+		log_file.print(',');
+		log_file.print(write_northing);
+		log_file.print(',');
+		log_file.print(write_lon,6);
+		log_file.print(',');
+		log_file.print(write_easting);
+		log_file.print(',');
+		log_file.print(write_elipsheight);
+		log_file.print(',');
+		log_file.println(write_speed);
+		log_file.close();
+	}
 }
 // Course to the next waypoint from current GPS possiion
-double calc_course(const double wlat, const double wlon) {
-    double coursetodest =
-      gps.courseTo(
-        lat_gps,
-        lon_gps,
-        wlat,
-        wlon);
-    return coursetodest;   
+double calc_course(const double wlat, const double wlon)
+{
+	double coursetodest =
+	gps.courseTo(
+	lat_gps,
+	lon_gps,
+	wlat,
+	wlon);
+	return coursetodest;   
 }
 
-double calc_distKm(const double wlat, const double wlon) {
-    double disttodest = gps.distanceBetween(lat_gps,lon_gps,wlat,wlon) ;/// 1000.0;
-    //Serial.println();
-    //Serial.print(disttodest);
-    //disttodest<1;
-//  if (disttodest <3)//2 meter radius
-//    {
-//        //ESCval = 1166;
-//        //Serial.println("DROP SPEED");
-//      if(tot_wps_infile==waypoint){
-//        homei = true;
-//        motorrun = false;
-//        ESC.write(600);
-//        
-//        #ifdef DEBUG
-//        Serial.println("END OF TRIP");
-//        #endif
-//        
-//      }
-//      waypoint++;
-//    } 
-//    else if (disttodest >2)
-//      {
-//        ESCval = 1200;
-//      }
-    return disttodest;
+double calc_distKm(const double wlat, const double wlon)
+{
+	double disttodest = gps.distanceBetween(lat_gps,lon_gps,wlat,wlon) ;/// 1000.0;
+	return disttodest;
 }
 
 
 
 void setupHMC5883L(){
-  //Setup the HMC5883L, and check for errors
-  int error;
-  error = compass.SetScale(1.3); //Set the scale of the compass.
-  if(error != 0) ;
-  //erial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
+	//Setup the HMC5883L, and check for errors
+	int error;
+	error = compass.SetScale(1.3); //Set the scale of the compass.
+	if(error != 0) ;
+	//erial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
 
-  error = compass.SetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
-  if(error != 0);
-  //Serial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
+	error = compass.SetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
+	if(error != 0);
+	//Serial.println(compass.GetErrorText(error)); //check if there is an error, and print if so
 }
 
 float getHeading(){
-  //Serial.println("------COMPASS FETCH------");
-  //Get the reading from the HMC5883L and calculate the heading
-  MagnetometerScaled scaled = compass.ReadScaledAxis(); //scaled values from compass.
-  float declinationAngle = -0.05235;
-  float heading = atan2(scaled.YAxis, scaled.XAxis)+declinationAngle;
-  
-  // If you have an EAST declination, use += declinationAngle, if you have a WEST declination, use -= declinationAngle
-  heading -= declinationAngle;
-  // Correct for when signs are reversed.
-  if(heading < 0)
-    heading += 2 * PI;
-  // Check for wrap due to addition of declination.
-  if(heading > 2 * PI)
-    heading -= 2 * PI;
-  //-0.0523598776
-  
-  //Serial.println(heading);
-  return (int) (heading * 180 / M_PI); //radians to degrees
+	//Serial.println("------COMPASS FETCH------");
+	//Get the reading from the HMC5883L and calculate the heading
+	MagnetometerScaled scaled = compass.ReadScaledAxis(); //scaled values from compass.
+	float declinationAngle = -0.05235;
+	float heading = atan2(scaled.YAxis, scaled.XAxis)+declinationAngle;
+
+	// If you have an EAST declination, use += declinationAngle, if you have a WEST declination, use -= declinationAngle
+	heading -= declinationAngle;
+	// Correct for when signs are reversed.
+	if(heading < 0)
+	heading += 2 * PI;
+	// Check for wrap due to addition of declination.
+	if(heading > 2 * PI)
+	heading -= 2 * PI;
+	//-0.0523598776
+
+	//Serial.println(heading);
+	return (int) (heading * 180 / M_PI); //radians to degrees
 }
 
 int setMotor(boolean motorrun)//this part works
 {
  
-//int pulse=1250;
-  if(motorrun){
-       
-  ESC.write(ESCval);//1200/1180/1170/1165/                      //Send servo position - Motor speed to ESC.
-  //Serial.println("motor runing");                     //Send servo 
-  //delay(200);                              //pause for 1/10 second.
-  //return();
-  }
+	//int pulse=1250;
+	if(motorrun)
+	{
+
+	ESC.write(ESCval);//1200/1180/1170/1165/                      //Send servo position - Motor speed to ESC.
+	//Serial.println("motor runing");                     //Send servo 
+	//delay(200);                              //pause for 1/10 second.
+	//return();
+	}
 }
 
 
 void setup() {
-  // put your setup code here, to run once:
-  //hom =true;
-  Serial.begin(19200);//serial debug
-  Serial1.begin(9600);//gps
-  rudder.attach(12);
-  ESC.attach(ESCpin);
-  SD.begin(4);
-  Wire.begin();
-  compass = HMC5883L(); //new instance of HMC5883L library
-  setupHMC5883L(); //setup the HMC5883L
-  //delay(5);
-  
-  //Serial.println(F("Calculating total WPs ..."));
-  tot_wps_infile = total_wps();
-  #ifdef DEBUG
-  Serial.print(F("Total WPS in file = "));
-  Serial.println(tot_wps_infile);
-  #endif
-  
-  delay(500);
-  
-  File log_file = SD.open("abc.csv", FILE_WRITE);
-  if (log_file) {
-    log_file.println("#########################################"); 
-    String header = ("date_time(UTC), sats-in-use, hdop, lat, northing, lon, easting, ellipsiodal-height, speed(Knots)");
-    log_file.println(header);
-    log_file.flush();
-    log_file.close();
-  } else {
-    #ifdef DEBUG
-    Serial.println(F("Couldn't open log (aquired GPS) file"));
-    #endif
-  }
-  
-  //Serial.println("Align rudder");
-  
-  rudder.write(90);
-  tot_wps_infile--;
-  //waypoint=1;
-  motorrun=true;
-  //Serial.println("Start motor ARMING");
-  
-  delay(2000);
-  arm();
-  //Serial.println("Motor Armed");
-  //delay(1000);
-  ESCval = 1350;//full speed
+	// put your setup code here, to run once:
+	//hom =true;
+	Serial.begin(19200);//serial debug
+	Serial1.begin(9600);//gps
+	rudder.attach(12);
+	ESC.attach(ESCpin);
+	SD.begin(4);
+	Wire.begin();
+	compass = HMC5883L(); //new instance of HMC5883L library
+	setupHMC5883L(); //setup the HMC5883L
+	//delay(5);
+
+	//Serial.println(F("Calculating total WPs ..."));
+	tot_wps_infile = total_wps();
+	#ifdef DEBUG
+	Serial.print(F("Total WPS in file = "));
+	Serial.println(tot_wps_infile);
+	#endif
+
+	delay(500);
+
+	File log_file = SD.open("abc.csv", FILE_WRITE);
+	if (log_file) {
+	log_file.println("#########################################"); 
+	String header = ("date_time(UTC), sats-in-use, hdop, lat, northing, lon, easting, ellipsiodal-height, speed(Knots)");
+	log_file.println(header);
+	log_file.flush();
+	log_file.close();
+	} else {
+	#ifdef DEBUG
+	Serial.println(F("Couldn't open log (aquired GPS) file"));
+	#endif
+	}
+
+	//Serial.println("Align rudder");
+
+	rudder.write(90);
+	tot_wps_infile--;
+	//waypoint=1;
+	motorrun=true;
+	//Serial.println("Start motor ARMING");
+
+	delay(2000);
+	arm();
+	//Serial.println("Motor Armed");
+	//delay(1000);
+	ESCval = 1350;//full speed
   
 }
  
@@ -485,81 +426,86 @@ void setup() {
 
 void loop() {
   
-  bool newdata = false;
-  unsigned long start = millis();
-  
-  while (millis() - start < 1000) {
-    if (feedGPS()) {
-      newdata = true;
-    }
-  }
-  feedGPS();
-  fixed = fix.value();
-  //SendData();
-//&& fixed >="1"
-  if (homei==false && fixed >="1"){
-    //VA_meter();
-    
-    #ifdef DEBUG
-    Serial.print("Current(A): ");
-    Serial.println(amps); 
-    Serial.print("BAT Volt(V): ");
-    Serial.println(battery);
-    Serial.print("current waypoint: ");
-    Serial.println(waypoint);  
-    #endif
-  
-  if (newdata) {
-    getcurGPS();
-    #ifdef DEBUG
-    Serial.print("GPS LAT: ");
-    Serial.println(lat_gps,6);
-    Serial.print("GPS LON: ");
-    Serial.println(lon_gps,6);
-    #endif
-  }
-    //SD_WP_Read(); //read Lat and Lon from th SD card to compute
-      DIS_TO_WP = calc_distKm(dlat,dlon );
-      #ifdef DEBUG
-      Serial.print("Distance to waypoint: ");
-      Serial.println(DIS_TO_WP);  
-      #endif
-      // < WP_Radius
-    if (DIS_TO_WP < WP_Radius)//check the distance is less than WP_Radius
-    {
-        ESCval = 1166;
-        //Serial.println("DROP SPEED");
+	bool newdata = false;
+	unsigned long start = millis();
 
-      if(tot_wps_infile==waypoint)
-      {
-        homei = true;
-        motorrun = false;
-        ESC.write(600);//stops motor
-        
-        #ifdef DEBUG
-        Serial.println("END OF TRIP");
-        #endif  
-      }
-      
-      waypoint++;
-    }
-    else if (DIS_TO_WP > WP_Radius)
-      {
-        ESCval = 1350;
-       // Serial.println("NORMAL SPEED");
-      }
-    Steering();
-    
+	while (millis() - start < 1000)
+	{
+		if (feedGPS())
+		{
+		newdata = true;
+		}
+	}
+	
+	feedGPS();
+	fixed = fix.value();
+	SendData();
+	//&& fixed >="1"
+	if (homei==false && fixed >="1")
+	{
+	//VA_meter();
 
-  //this part works
-  if(motorrun==false)
-  {
-    setMotor(false); 
-  }
-    else if (motorrun==true)
-    {
-    setMotor(true);
-    }
-  }
+	#ifdef DEBUG
+	Serial.print("Current(A): ");
+	Serial.println(amps); 
+	Serial.print("BAT Volt(V): ");
+	Serial.println(battery);
+	Serial.print("current waypoint: ");
+	Serial.println(waypoint);  
+	#endif
+
+	if (newdata)
+	{
+	getcurGPS();
+	#ifdef DEBUG
+	Serial.print("GPS LAT: ");
+	Serial.println(lat_gps,6);
+	Serial.print("GPS LON: ");
+	Serial.println(lon_gps,6);
+	#endif
+	}
+	//SD_WP_Read(); //read Lat and Lon from th SD card to compute
+	DIS_TO_WP = calc_distKm(dlat,dlon );
+	#ifdef DEBUG
+	Serial.print("Distance to waypoint: ");
+	Serial.println(DIS_TO_WP);  
+	#endif
+	// < WP_Radius
+	if (DIS_TO_WP < WP_Radius)//check the distance is less than WP_Radius
+	{
+	ESCval = 1166;
+	//Serial.println("DROP SPEED");
+	if(tot_wps_infile==waypoint)
+	{
+	
+	homei = true;
+	motorrun = false;
+	ESC.write(600);//stops motor
+
+	#ifdef DEBUG
+	Serial.println("END OF TRIP");
+	#endif  
+	}
+
+	waypoint++;
+	}
+	else if (DIS_TO_WP > WP_Radius)
+		{
+		ESCval = 1350;
+		// Serial.println("NORMAL SPEED");
+		}
+	Steering();
+
+
+	//motor will run untill true
+	if(motorrun==false)
+		{
+		setMotor(false); 
+		}
+		else if (motorrun==true)
+		{
+		setMotor(true);
+		}
+	}
 }
 
