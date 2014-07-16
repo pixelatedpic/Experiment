@@ -13,7 +13,7 @@ HMC5883L compass;
 Servo ESC;  
 Servo rudder;
 int ESCpin = 13;                          //Servo on pin 9
-int armValue=700;  // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino.
+int armValue=748;  // "zero" position for arming ESC. As some wont arm with a '0' value fromthe arduino.
 int error = 0;
 unsigned long time;
 boolean motorrun=false;
@@ -35,7 +35,7 @@ int waypoint;
 boolean homei = false;
 double wlat, wlon;
 double dlat,dlon;
-int xv=45;
+int xv=900;
 int ESCval;
 double WP_Radius = 3; // radius which select next waypoint and compute
 //battery current and voltage
@@ -281,7 +281,7 @@ void arm()
 {
 //  ESC.writeMicroseconds(armValue); 
 //  delay(2500);
-  ESC.write(21); 
+  ESC.writeMicroseconds(748); 
   delay(2500); 
 //  ESC.write(21); 
 //  delay(2500); 
@@ -425,12 +425,13 @@ int setMotor(boolean motorrun)//this part works
 //int pulse=1250;
   if(motorrun==true){
        
-  ESC.write(ESCval);//1200/1180/1170/1165/                      //Send servo position - Motor speed to ESC.
+  ESC.writeMicroseconds(ESCval);//1200/1180/1170/1165/                      //Send servo position - Motor speed to ESC.
   Serial.println("motor runing");                     //Send servo 
   //delay(200);                              //pause for 1/10 second.
-  //return();
+  
  // ESC.flush();
   }
+
 }
 
 
@@ -476,7 +477,7 @@ void setup() {
   //waypoint=1;
   //motorrun=true;
   //Serial.println("Start motor ARMING");
-  ESC.attach(ESCpin);
+  ESC.attach(ESCpin,748,1500);
   delay(1);
   //ESC.write(21);
   arm();
@@ -513,6 +514,7 @@ void loop() {
 // else{
 //   ESC.detach();
 // }
+  //if GPS not fixed fee ESC the value 749 else normal procedure
   if (homei==false && fixed >="1"){
 //    ESC.attach(9);
 //    ESC.refresh();
@@ -543,7 +545,7 @@ void loop() {
       Serial.println(DIS_TO_WP);  
       #endif
       // < WP_Radius
-    if (DIS_TO_WP < WP_Radius)//check the distance is less than WP_Radius
+    if (DIS_TO_WP < WP_Radius )//check the distance is less than WP_Radius
     {
          ESCval = xv;
         //Serial.println("DROP SPEED");
@@ -552,8 +554,8 @@ void loop() {
       {
         homei = true;
         motorrun = false;
-        ESC.write(21);//stops motor
-        
+        //ESC.write(740);//stops motor
+        ESC.detach();//stops motor by detaching pin
         #ifdef DEBUG
         Serial.println("END OF TRIP");
         #endif  
@@ -578,6 +580,6 @@ void loop() {
     {
     setMotor(true);
     }
-  }
+  }else{ESC.writeMicroseconds(749);}
 }
 
