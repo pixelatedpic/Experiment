@@ -1,0 +1,84 @@
+// Lintel LSC bell system
+#include <Wire.h>
+#include "RTClib.h"
+#include <Time.h>
+#include <TimeAlarms.h>
+
+
+RTC_DS1307 RTC;
+int dayofweek;
+time_t syncProvider()     //this does the same thing as RTC_DS1307::get()
+{
+  return RTC.now().unixtime();
+}
+ 
+void setup () {
+  Wire.begin();
+  RTC.begin();
+  Serial.begin(9600);
+  setSyncProvider(syncProvider);
+   if (! RTC.isrunning()) {
+     Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled
+    //RTC.adjust(DateTime(__DATE__, __TIME__));
+    //RTC.adjust(DateTime("SEP 06 2014","17:13:00"));
+  }
+ Alarm.alarmRepeat(8,35,0, Event1);  // every day
+ Alarm.alarmRepeat(11,50,0, Event1);  // every day
+ Alarm.alarmRepeat(13,35,0, Event1);  // every day
+ Alarm.alarmRepeat(17,50,0, Event1);  // every day
+
+ // Alarm.alarmRepeat(15,51,0, Event1);  // every day
+ pinMode(2, OUTPUT);
+} 
+void loop () {
+ clockDisplay();
+ //int dayofweek = now.dayOfWeeks();
+ //Serial.println(dayofweek);
+ Alarm.delay(1000); 
+}
+
+void clockDisplay()
+{
+
+  DateTime now = RTC.now();
+  dayofweek = now.dayOfWeeks();
+//  switch(dayofweek){
+//    case 1:
+//    Serial.print("Monday");
+//    break;
+//    case 2:
+//    Serial.print("Tuesday");
+//    break;
+//    case 3:
+//    Serial.print("Wednesday");
+//    break;
+//    case 4:
+//    Serial.print("Thursday");
+//    break;
+//    case 5:
+//    Serial.print("Friday");
+//    break;
+//    case 6:
+//    Serial.print("Saturday");
+//    break;
+//    case 0:
+//    Serial.print("Sunday");
+//    break;
+//  }
+  char buf[20];  // -------------------- RTC Time --------------------
+  sprintf(buf, "%02d:%02d  %02d/%02d/%4d", now.hour(), now.minute(), now.month(), now.day(), now.year());
+  Serial.println(buf);
+}  
+
+void Event1(){
+  
+  if(dayofweek !=5){
+  Serial.println("DingDong");  
+  digitalWrite(2, HIGH);  //alarm test output
+  //Serial.println("dasdsdsdsdsdsdsdsd");
+  delay(5000);
+  digitalWrite(2, LOW);
+  }
+ 
+  }
