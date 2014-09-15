@@ -23,10 +23,14 @@ void setup () {
     //RTC.adjust(DateTime(__DATE__, __TIME__));
     //RTC.adjust(DateTime("SEP 06 2014","17:13:00"));
   }
- Alarm.alarmRepeat(8,35,0, Event1);  // every day
- Alarm.alarmRepeat(11,50,0, Event1);  // every day
+ Alarm.alarmRepeat(8,35,0, Event1);  // every day full
+ Alarm.alarmRepeat(12,00,0, Event1);  // every day
  Alarm.alarmRepeat(13,35,0, Event1);  // every day
- Alarm.alarmRepeat(17,50,0, Event1);  // every day
+ Alarm.alarmRepeat(18,00,0, Event1);  // every day
+ 
+ Alarm.alarmRepeat(11,45,0, Event2);  // every day 2sec
+ Alarm.alarmRepeat(17,45,0, Event2);  // every day
+
 
  // Alarm.alarmRepeat(15,51,0, Event1);  // every day
  pinMode(2, OUTPUT);
@@ -80,5 +84,15 @@ void Event1(){
   delay(5000);
   digitalWrite(2, LOW);
   }
- 
+}
+
+void Event2(){
+  
+  if(dayofweek !=5){
+  Serial.println("DingDong");  
+  digitalWrite(2, HIGH);  //alarm test output
+  //Serial.println("dasdsdsdsdsdsdsdsd");
+  delay(2000);
+  digitalWrite(2, LOW);
   }
+}
