@@ -80,3 +80,6 @@ srv:listen(80,function(conn)
   
     end)
 end)
+
+
+----http://www.dev-hq.net/lua/5--if-else-elseif
