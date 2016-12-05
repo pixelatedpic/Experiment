@@ -1,6 +1,6 @@
 void modemInt(){
     serialGSM.println("AT");
-    while (SerialReadUntil(&serialGSM, "OK", 1000)) {
+    while (SerialReadUntil(&serialGSM, "OK", 2000)) {
     
 
     Serial.println("start send commands");
@@ -10,7 +10,7 @@ void modemInt(){
     serialGSM.println("AT+CGATT=1");
   //Serial.println(serialGSM.read());
 
- if (SerialReadUntil(&serialGSM, "OK", 1000)) {
+ if (SerialReadUntil(&serialGSM, "OK", 2000)) {
     
 
     Serial.println("attach GPRS");
@@ -20,7 +20,7 @@ void modemInt(){
   }
   delay(1000);
   serialGSM.println("AT+CGDCONT=1,\"IP\",\"Internet.dhimobile\"");
-  if (SerialReadUntil(&serialGSM, "OK", 1000)) {
+  if (SerialReadUntil(&serialGSM, "OK", 2000)) {
 
     Serial.println("apn READY");
     //delay(1000);
@@ -58,17 +58,22 @@ void modemInt(){
   }
   serialGSM.println("AT+CIPSEND");
   if (SerialReadUntil(&serialGSM, ">", 1000)) {
-    //Serial.println("GOT PROMPT");
+    Serial.println("GOT PROMPT");
     //post.php?apikey=kQkIwvr2Yi4&BuoyID=12345
-    serialGSM.println("POST /post.php?apikey=kQkIwvr2Yi4&BuoyID=12345 HTML1.1");
-    serialGSM.println("HOST:gps.eit-maldives.com");
-    serialGSM.println();
-    delay(2000);
-    serialGSM.write(0x1A);
+
   } 
   else {
     Serial.println("UNABLE TO GET PROMPT");
   }
+    serialGSM.println("PUT /post.php?apikey=kQkIwvr2Yi4&BuoyID=12345 HTTP/1.1");
+    serialGSM.println("HOST: gps.eit-maldives.com");
+    serialGSM.println("Connection: keep-alive");
+    serialGSM.println();
+    delay(500);
+    //serialGSM.println("\"");
+    serialGSM.write(0x1A);
+
+  
   delay(1000);
   serialGSM.println("AT+CIPCLOSE");
   if (SerialReadUntil(&serialGSM, "OK", 1000)) {
