@@ -1,0 +1,83 @@
+void modemInt(){
+    serialGSM.println("AT");
+    while (SerialReadUntil(&serialGSM, "OK", 1000)) {
+    
+
+    Serial.println("start send commands");
+  } 
+    //serialGSM.println("AT+CGATT=0");
+    delay(1000);
+    serialGSM.println("AT+CGATT=1");
+  //Serial.println(serialGSM.read());
+
+ if (SerialReadUntil(&serialGSM, "OK", 1000)) {
+    
+
+    Serial.println("attach GPRS");
+  } 
+  else {
+    Serial.println("attach GPRS FAILURE");
+  }
+  delay(1000);
+  serialGSM.println("AT+CGDCONT=1,\"IP\",\"Internet.dhimobile\"");
+  if (SerialReadUntil(&serialGSM, "OK", 1000)) {
+
+    Serial.println("apn READY");
+    //delay(1000);
+  } 
+  else {
+
+    Serial.println("apn FAILURE");
+
+  }
+  
+  //serialGSM.println("AT");
+  //delay(3000);
+  serialGSM.println("AT+CGACT=1,1");
+  if (SerialReadUntil(&serialGSM, "OK", 2000)) {
+    Serial.println("Configure bearer profile DONE");
+  } 
+  else {
+    Serial.println("Configure bearer profile FAILED");
+  }
+  
+  serialGSM.println("AT+CIFSR");
+  if (SerialReadUntil(&serialGSM, "OK", 5000)) {
+    Serial.println("GPRS connect OK");
+  } 
+  else {
+    Serial.println("GPRS connect FAIL");
+  }
+
+   serialGSM.println("AT+CIPSTART=\"TCP\",\"gps.eit-maldives.com\",80");
+  if (SerialReadUntil(&serialGSM, "CONNECT OK", 5000)) {
+    Serial.println("SERVER connect OK");
+  } 
+  else {
+    Serial.println("SERVER connect FAIL");
+  }
+  serialGSM.println("AT+CIPSEND");
+  if (SerialReadUntil(&serialGSM, ">", 1000)) {
+    //Serial.println("GOT PROMPT");
+    //post.php?apikey=kQkIwvr2Yi4&BuoyID=12345
+    serialGSM.println("POST /post.php?apikey=kQkIwvr2Yi4&BuoyID=12345 HTML1.1");
+    serialGSM.println("HOST:gps.eit-maldives.com");
+    serialGSM.println();
+    delay(2000);
+    serialGSM.write(0x1A);
+  } 
+  else {
+    Serial.println("UNABLE TO GET PROMPT");
+  }
+  delay(1000);
+  serialGSM.println("AT+CIPCLOSE");
+  if (SerialReadUntil(&serialGSM, "OK", 1000)) {
+    Serial.println("Disconnect"); 
+  } 
+  else {
+    Serial.println("Disconnect fail");
+  }
+//Serial.println("---------------INITIALIZING DONE-------------------");
+  
+
+}
