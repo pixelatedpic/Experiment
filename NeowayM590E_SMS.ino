@@ -1,3 +1,6 @@
+//CODER: MOHAMED AFZAL
+//7th Dec 2016 (EIT PVT LTD)
+
 #include <SoftwareSerial.h>
 SoftwareSerial GSMmodem(2,3);
 char currentLine[142] = "";
